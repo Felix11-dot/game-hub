@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Game Hub</title>
+<style>
+:root{--bg:#f4f6f5;--surface:#fff;--text:#1d2320;--muted:#66706b;--line:#dfe4e1;--red:#d12c3b;--black:#1d2320;--accent:#1f7a4d;--accent-text:#fff;--ok:#1f7a4d;--shadow:0 6px 18px rgba(0,0,0,.14);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121715;--surface:#1b221f;--text:#eef2f0;--muted:#98a39d;--line:#2c3631;--red:#ff6b78;--accent:#3fbf86;--accent-text:#0b1511;--ok:#4fd197;--shadow:0 6px 18px rgba(0,0,0,.5)}}
+:root[data-theme="dark"]{--bg:#121715;--surface:#1b221f;--text:#eef2f0;--muted:#98a39d;--line:#2c3631;--red:#ff6b78;--accent:#3fbf86;--accent-text:#0b1511;--ok:#4fd197;--shadow:0 6px 18px rgba(0,0,0,.5)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+main{max-width:720px;margin:0 auto;padding:32px 16px 48px;text-align:center}
+h1{margin:0;font-size:clamp(2.2rem,8vw,3.4rem);letter-spacing:.12em;font-weight:800}
+.sub{margin:6px 0 28px;color:var(--muted);font-size:1.05rem}
+.cards{display:flex;justify-content:center;gap:clamp(8px,2.5vw,18px);perspective:900px}
+.card{width:clamp(66px,20vw,130px);aspect-ratio:5/7;background:#fff;border-radius:clamp(8px,2vw,12px);box-shadow:var(--shadow);position:relative;border:1px solid #e3e3e3;user-select:none;color:#1d2320}
+.card.red{color:#d12c3b}
+.corner{position:absolute;line-height:1;font-weight:700;font-size:clamp(1rem,4.5vw,1.9rem);display:flex;flex-direction:column;align-items:center}
+.corner small{font-size:.8em;margin-top:2px}
+.corner.tl{top:7%;left:9%}
+.corner.br{bottom:7%;right:9%;transform:rotate(180deg)}
+.center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(2.2rem,10vw,4.6rem)}
+@keyframes shuf{0%{transform:translateY(0) rotateY(0)}30%{transform:translateY(-22px) rotateY(90deg) rotate(-6deg)}60%{transform:translateY(-8px) rotateY(200deg) rotate(5deg)}100%{transform:translateY(0) rotateY(360deg)}}
+.card.shuffling{animation:shuf .55s ease both}
+.shuffle{margin:30px auto 8px;display:block;padding:16px 48px;font-size:1.3rem;font-weight:800;letter-spacing:.14em;border:0;border-radius:999px;background:var(--accent);color:var(--accent-text);cursor:pointer;box-shadow:0 8px 20px rgba(31,122,77,.35);transition:transform .1s}
+.shuffle:hover{transform:translateY(-2px)}
+.shuffle:active{transform:scale(.97)}
+.modewrap{margin-top:6px}
+.mode{display:inline-flex;border:1px solid var(--line);border-radius:999px;background:var(--surface);padding:4px}
+.mode button{border:0;background:transparent;color:var(--muted);padding:8px 24px;border-radius:999px;font-weight:700;cursor:pointer;font-size:.95rem}
+.mode button.on{background:var(--text);color:var(--bg)}
+.modehint{margin:8px 0 0;color:var(--muted);font-size:.9rem}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:26px;text-align:left}
+.panel h2{margin:0 0 10px;font-size:1.05rem}
+.panel ul{margin:0;padding-left:20px;color:var(--muted);line-height:1.6}
+.btn{padding:12px 18px;font-size:1rem;font-weight:700;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--text);cursor:pointer}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.players{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:6px}
+.pbtn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 8px;border-radius:14px;border:2px solid var(--accent);background:var(--bg);color:var(--text);cursor:pointer;font:inherit;transition:transform .1s,background .15s}
+.pbtn:hover:not(:disabled){background:var(--accent);color:var(--accent-text)}
+.pbtn:active:not(:disabled){transform:scale(.96)}
+.pbtn:disabled{opacity:.45;cursor:not-allowed;border-color:var(--line)}
+.pn{font-weight:700;font-size:.95rem}
+.ps{font-size:2rem;font-weight:800;line-height:1.1}
+.pl{font-size:.75rem;opacity:.75}
+.msg{min-height:1.6em;margin:12px 0 4px;font-weight:600;color:var(--muted)}
+.msg.ok{color:var(--ok)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.hhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.hhead h2{margin:0}
+.hhead .btn{padding:6px 12px;font-size:.85rem}
+.stats{color:var(--muted);font-size:.9rem;margin-bottom:10px}
+.panel ul.hist{padding:0;list-style:none;max-height:360px;overflow-y:auto}
+.hist li{display:flex;flex-direction:column;gap:4px;padding:10px 0;border-top:1px solid var(--line)}
+.hc{font-weight:800;font-size:1.05rem;letter-spacing:.04em}
+.hc .r{color:var(--red)}
+.hm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+.tag{padding:2px 9px;border-radius:999px;border:1px solid var(--line);font-weight:700;font-size:.78rem}
+.tag.solved{color:var(--ok);border-color:var(--ok)}
+.overlay{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;overflow-y:auto}
+.overlay[hidden]{display:none}
+.overlay h2{margin:10px 0 0;font-size:1.4rem}
+.counts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:6px}
+.counts button{width:clamp(64px,20vw,88px);aspect-ratio:1;font-size:1.8rem;font-weight:800;border-radius:18px;border:2px solid var(--accent);background:var(--surface);color:var(--text);cursor:pointer}
+.counts button:hover{background:var(--accent);color:var(--accent-text)}
+
+.view[hidden]{display:none}
+.topbar{max-width:720px;margin:0 auto;padding:16px 16px 0;text-align:left}
+.back{color:var(--accent);font-weight:700;text-decoration:none}
+.back:hover{text-decoration:underline}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:8px;text-align:left}
+.gcard{display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:18px;background:var(--surface);border:1px solid var(--line);color:inherit;text-decoration:none;box-shadow:var(--shadow);transition:transform .12s}
+a.gcard:hover{transform:translateY(-3px)}
+.gicon{width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.9rem;font-weight:800;background:var(--accent);color:var(--accent-text)}
+.gtitle{font-weight:800;font-size:1.15rem}
+.gdesc{color:var(--muted);font-size:.92rem;line-height:1.4}
+.gmeta{display:flex;gap:6px;flex-wrap:wrap}
+.gplay{margin-top:auto;font-weight:800;color:var(--accent)}
+.gcard.soon{border-style:dashed;box-shadow:none;opacity:.65}
+.gcard.soon .gicon{background:var(--line);color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="view" id="hub">
+<main>
+  <h1>GAME HUB</h1>
+  <p class="sub">Pick a game and play with friends.</p>
+  <div class="grid" id="grid"></div>
+</main>
+</div>
+<div class="view" id="game-24" hidden>
+<div class="topbar"><a class="back" href="#">← All games</a></div>
+<div class="overlay" id="setup" hidden>
+  <h1>24 GAME</h1>
+  <h2>How many players?</h2>
+  <div class="counts" id="counts"></div>
+  <a class="btn" href="#" id="backhome" style="text-decoration:none">← Back to all games</a>
+  <button class="btn" id="cancelsetup" type="button" hidden>Cancel</button>
+</div>
+
+<main>
+  <h1>24 GAME</h1>
+  <p class="sub">Use four cards to make 24!</p>
+
+  <div class="cards" id="cards" aria-live="polite"></div>
+  <button class="shuffle" id="shuffle">SHUFFLE</button>
+  <div class="modewrap">
+    <div class="mode" role="group" aria-label="Difficulty"><button type="button" id="m-easy" class="on">Easy</button><button type="button" id="m-hard">Hard</button></div>
+    <p class="modehint" id="modehint"></p>
+  </div>
+
+  <section class="panel">
+    <h2>Who got 24? Tap to score</h2>
+    <div class="players" id="players"></div>
+    <div class="msg" id="msg"></div>
+    <div class="actions">
+      <button class="btn" id="show" type="button">Show solution</button>
+      <button class="btn" id="resetpts" type="button">Reset points</button>
+      <button class="btn" id="change" type="button">Change players</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>How to play</h2>
+    <ul>
+      <li>Use all four cards exactly once with + − × ÷ and parentheses to make exactly 24.</li>
+      <li>Cards run from Ace to 10 (no face cards). An Ace counts as 1, or 11 if you prefer.</li>
+      <li>Example: 6, 2, 5, 2 → (6 + 2) × (5 − 2) = 24</li>
+      <li>Everyone works it out. The first player to get 24 taps their button to score a point, and the next hand is dealt.</li>
+      <li>Easy: every hand has two or more different solutions. Hard: every hand has exactly one.</li>
+    </ul>
+  </section>
+
+  <section class="panel">
+    <div class="hhead"><h2>History</h2><button class="btn" id="clearhist" type="button">Clear</button></div>
+    <div class="stats" id="stats"></div>
+    <ul class="hist" id="hist"></ul>
+  </section>
+</main>
+</div>
+<script>
+(function(){
+  var SUITS=[{s:"♥",r:true},{s:"♦",r:true},{s:"♠",r:false},{s:"♣",r:false}];
+  var hand=[],done=true,mode="easy",current=[],started=Date.now(),history=[],players=[],cache={};
+  var $=function(id){return document.getElementById(id)};
+
+  // ---- fraction helpers ----
+  function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){var t=a%b;a=b;b=t}return a||1}
+  function fr(n,d){if(d<0){n=-n;d=-d}var g=gcd(n,d);return {n:n/g,d:d/g}}
+  function add(a,b){return fr(a.n*b.d+b.n*a.d,a.d*b.d)}
+  function sub(a,b){return fr(a.n*b.d-b.n*a.d,a.d*b.d)}
+  function mul(a,b){return fr(a.n*b.n,a.d*b.d)}
+  function div(a,b){return fr(a.n*b.d,a.d*b.n)}
+
+  // ---- counting distinct solutions (reordered or regrouped versions count once) ----
+  function mkSum(ts){var o=[];ts.forEach(function(t){if(t.n.t==="s")t.n.terms.forEach(function(u){o.push({s:t.s*u.s,n:u.n})});else o.push({s:t.s,n:t.n})});
+    var ks=o.map(function(t){return(t.s>0?"+":"-")+t.n.k}).sort();return{t:"s",terms:o,k:"S("+ks.join("")+")"}}
+  function mkProd(fs){var o=[];fs.forEach(function(f){if(f.n.t==="p")f.n.facs.forEach(function(u){o.push({p:f.p*u.p,n:u.n})});else o.push({p:f.p,n:f.n})});
+    var ks=o.map(function(f){return(f.p>0?"*":"/")+f.n.k}).sort();return{t:"p",facs:o,k:"P("+ks.join("")+")"}}
+  function solveAll(nums,out){
+    (function go(items){
+      if(items.length===1){var v=items[0].v;if(v.n===24&&v.d===1&&!out[items[0].node.k])out[items[0].node.k]=items[0].e;return}
+      for(var i=0;i<items.length;i++)for(var j=i+1;j<items.length;j++){
+        var a=items[i],b=items[j],rest=items.filter(function(_,k){return k!==i&&k!==j}),c=[];
+        c.push({v:add(a.v,b.v),e:"("+a.e+" + "+b.e+")",node:mkSum([{s:1,n:a.node},{s:1,n:b.node}])});
+        c.push({v:mul(a.v,b.v),e:"("+a.e+" × "+b.e+")",node:mkProd([{p:1,n:a.node},{p:1,n:b.node}])});
+        c.push({v:sub(a.v,b.v),e:"("+a.e+" − "+b.e+")",node:mkSum([{s:1,n:a.node},{s:-1,n:b.node}])});
+        c.push({v:sub(b.v,a.v),e:"("+b.e+" − "+a.e+")",node:mkSum([{s:1,n:b.node},{s:-1,n:a.node}])});
+        if(b.v.n!==0)c.push({v:div(a.v,b.v),e:"("+a.e+" ÷ "+b.e+")",node:mkProd([{p:1,n:a.node},{p:-1,n:b.node}])});
+        if(a.v.n!==0)c.push({v:div(b.v,a.v),e:"("+b.e+" ÷ "+a.e+")",node:mkProd([{p:1,n:b.node},{p:-1,n:a.node}])});
+        for(var k=0;k<c.length;k++)go(rest.concat([c[k]]));
+      }
+    })(nums.map(function(x){return{v:fr(x,1),e:String(x),node:{t:"n",k:String(x)}}}));
+  }
+  // an Ace may count as 1 or 11
+  function allSolutions(ranks){
+    var idx=[];ranks.forEach(function(r,i){if(r===1)idx.push(i)});var out={};
+    for(var m=0;m<(1<<idx.length);m++){var vals=ranks.slice();idx.forEach(function(p,q){if((m>>q)&1)vals[p]=11});solveAll(vals,out)}
+    return Object.keys(out).map(function(k){return out[k].replace(/^\((.*)\)$/,"$1")});
+  }
+  function sols(h){var r=h.map(function(c){return c.rank}).sort(function(a,b){return a-b}),k=r.join(",");return cache[k]||(cache[k]=allSolutions(r))}
+
+  // ---- cards ----
+  function label(r){return r===1?"A":String(r)}
+  function render(animate){
+    var box=$("cards");box.innerHTML="";
+    hand.forEach(function(c,i){
+      var d=document.createElement("div");
+      d.className="card"+(c.red?" red":"")+(animate?" shuffling":"");
+      d.style.animationDelay=(i*70)+"ms";
+      d.setAttribute("aria-label",label(c.rank)+" of "+c.suit);
+      d.innerHTML='<div class="corner tl">'+label(c.rank)+'<small>'+c.suit+'</small></div><div class="center">'+c.suit+'</div><div class="corner br">'+label(c.rank)+'<small>'+c.suit+'</small></div>';
+      box.appendChild(d);
+    });
+  }
+  function say(text,cls){var m=$("msg");m.textContent=text;m.className="msg "+(cls||"")}
+
+  function newHand(){
+    var h,tries=0,n;
+    do{
+      h=[];
+      for(var i=0;i<4;i++){
+        var s=SUITS[Math.floor(Math.random()*4)];
+        h.push({rank:1+Math.floor(Math.random()*10),suit:s.s,red:s.r});
+      }
+      n=sols(h).length;tries++;
+    }while(!(mode==="hard"?n===1:n>=2)&&tries<800);
+    hand=h;current=sols(h);done=false;started=Date.now();
+  }
+  function shuffle(){
+    if(hand.length&&!done)record("skipped","");
+    newHand();render(true);
+    say("Solve it together, then tap who got 24.");
+    renderPlayers();
+  }
+
+  // ---- history ----
+  try{var sh=JSON.parse(localStorage.getItem("g24hist")||"[]");if(Array.isArray(sh))history=sh;var sm=localStorage.getItem("g24mode");if(sm==="hard"||sm==="easy")mode=sm}catch(_){}
+  function saveHist(){try{localStorage.setItem("g24hist",JSON.stringify(history))}catch(_){}}
+  function record(result,who){
+    if(done)return;done=true;
+    history.unshift({cards:hand.map(function(c){return{r:label(c.rank),s:c.suit,red:c.red}}),mode:mode,result:result,who:who||"",secs:Math.round((Date.now()-started)/1000)});
+    history=history.slice(0,30);saveHist();renderHistory();
+  }
+  function renderHistory(){
+    var ul=$("hist");ul.innerHTML="";
+    var cnt={solved:0,"gave up":0,skipped:0};history.forEach(function(h){cnt[h.result]=(cnt[h.result]||0)+1});
+    $("stats").textContent=history.length?"Scored "+cnt.solved+" · Gave up "+cnt["gave up"]+" · Skipped "+cnt.skipped:"";
+    if(!history.length){var e=document.createElement("li");e.className="hm";e.textContent="No games yet. Shuffle and start playing!";ul.appendChild(e);return}
+    history.forEach(function(h){
+      var li=document.createElement("li"),cards=document.createElement("div");cards.className="hc";
+      h.cards.forEach(function(c,i){var sp=document.createElement("span");if(c.red)sp.className="r";sp.textContent=c.r+c.s;cards.appendChild(sp);if(i<3)cards.appendChild(document.createTextNode("  "))});
+      var meta=document.createElement("div");meta.className="hm";
+      function tag(t,cls){var s=document.createElement("span");s.className="tag "+(cls||"");s.textContent=t;meta.appendChild(s)}
+      tag(h.mode==="hard"?"Hard":"Easy");
+      if(h.result==="solved")tag("✓ "+(h.who||"Solved"),"solved");else tag(h.result==="gave up"?"Gave up":"Skipped");
+      if(h.result==="solved"){var tm=document.createElement("span");tm.textContent=h.secs+"s";meta.appendChild(tm)}
+      li.appendChild(cards);li.appendChild(meta);ul.appendChild(li);
+    });
+  }
+
+  // ---- players ----
+  function renderPlayers(){
+    var box=$("players");box.innerHTML="";
+    players.forEach(function(p,i){
+      var b=document.createElement("button");b.type="button";b.className="pbtn";b.disabled=done;
+      b.innerHTML='<span class="pn"></span><span class="ps"></span><span class="pl">tap to add 1 point</span>';
+      b.children[0].textContent=p.name;b.children[1].textContent=p.score;
+      b.addEventListener("click",function(){award(i)});
+      box.appendChild(b);
+    });
+  }
+  function award(i){
+    if(done)return;
+    var p=players[i];p.score++;
+    record("solved",p.name);
+    shuffle();
+    say("+1 for "+p.name+"! New hand dealt.","ok");
+  }
+  function startGame(n){
+    players=[];for(var i=1;i<=n;i++)players.push({name:"Player "+i,score:0});
+    $("setup").hidden=true;
+    done=true;shuffle();
+  }
+  function openSetup(){$("cancelsetup").hidden=!players.length;$("setup").hidden=false}
+  for(var n=1;n<=6;n++)(function(n){
+    var b=document.createElement("button");b.type="button";b.textContent=n;b.setAttribute("aria-label",n+(n===1?" player":" players"));
+    b.addEventListener("click",function(){startGame(n)});$("counts").appendChild(b);
+  })(n);
+
+  function setMode(m,deal){
+    mode=m;try{localStorage.setItem("g24mode",m)}catch(_){}
+    $("m-easy").className=m==="easy"?"on":"";$("m-hard").className=m==="hard"?"on":"";
+    $("modehint").textContent=m==="easy"?"Easy: every hand has two or more different solutions.":"Hard: every hand has exactly one solution.";
+    if(deal)shuffle();
+  }
+
+  $("shuffle").addEventListener("click",shuffle);
+  $("show").addEventListener("click",function(){
+    if(!hand.length)return;
+    var s=current[0];
+    record("gave up","");
+    say((current.length>1?"One of "+current.length+" solutions: ":"The only solution: ")+s+" = 24"+(/\b11\b/.test(s)?" (Ace counted as 11)":"")+". No point this round.");
+    renderPlayers();
+  });
+  $("m-easy").addEventListener("click",function(){if(mode!=="easy")setMode("easy",true)});
+  $("m-hard").addEventListener("click",function(){if(mode!=="hard")setMode("hard",true)});
+  $("clearhist").addEventListener("click",function(){history=[];saveHist();renderHistory()});
+  $("resetpts").addEventListener("click",function(){
+    if(!players.length)return;
+    players.forEach(function(p){p.score=0});
+    renderPlayers();
+    say("All player points reset to 0.");
+  });
+  $("change").addEventListener("click",openSetup);
+  $("cancelsetup").addEventListener("click",function(){$("setup").hidden=true});
+
+  window.g24enter=function(){if(!players.length)openSetup()};
+  setMode(mode,false);
+  renderHistory();
+  newHand();render(false);renderPlayers();
+})();
+</script>
+<script>
+(function(){
+  // To add a game: add an entry here. Use hash:"name" for a page section on this page, or href:"file.html" for a separate page.
+  var GAMES=[
+    {id:"24-game",title:"24 Game",icon:"24",desc:"Use four cards to make exactly 24. Easy and Hard modes, scoring for up to 6 players.",tags:["1–6 players","Maths","Cards"],hash:"24-game"},
+    {title:"More games coming soon",icon:"+",desc:"New games will show up here.",soon:true}
+  ];
+  var grid=document.getElementById("grid");
+  GAMES.forEach(function(g){
+    var el=document.createElement(g.soon?"div":"a");
+    el.className="gcard"+(g.soon?" soon":"");
+    if(!g.soon)el.href=g.href||("#"+g.hash);
+    var icon=document.createElement("div");icon.className="gicon";icon.textContent=g.icon;
+    var t=document.createElement("div");t.className="gtitle";t.textContent=g.title;
+    var d=document.createElement("div");d.className="gdesc";d.textContent=g.desc;
+    el.appendChild(icon);el.appendChild(t);el.appendChild(d);
+    if(g.tags){var m=document.createElement("div");m.className="gmeta";g.tags.forEach(function(x){var s=document.createElement("span");s.className="tag";s.textContent=x;m.appendChild(s)});el.appendChild(m)}
+    if(!g.soon){var p=document.createElement("div");p.className="gplay";p.textContent="Play →";el.appendChild(p)}
+    grid.appendChild(el);
+  });
+  var views={"24-game":document.getElementById("game-24")},hub=document.getElementById("hub");
+  function route(){
+    var h=location.hash.replace("#",""),v=views[h];
+    hub.hidden=!!v;
+    Object.keys(views).forEach(function(k){views[k].hidden=(k!==h)});
+    document.title=v?(GAMES.filter(function(g){return g.hash===h})[0].title+" · Game Hub"):"Game Hub";
+    window.scrollTo(0,0);
+    if(h==="24-game"&&window.g24enter)window.g24enter();
+  }
+  window.addEventListener("hashchange",route);
+  route();
+})();
+</script>
+</body>
+</html>
